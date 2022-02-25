@@ -66,12 +66,6 @@ export default {
     ]
   },
   networks: {
-    rinkeby: {
-      url: process.env.STAGING_ALCHEMY_KEY,
-      accounts: [],
-	    gas: 2100000,
-	    gasPrice: 8000000000,
-    },
     hardhat: {
       gasPrice: 225000000000,
       // chainId: !forkingData ? 43112 : undefined, //Only specify a chainId if we are not forking
@@ -108,9 +102,4 @@ export default {
       accounts: []
     }
   },
-  etherscan: {
-    apiKey: {
-      avalancheFujiTestnet: process.env.API_KEY
-    }
-  }
 }
