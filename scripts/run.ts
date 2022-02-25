@@ -1,16 +1,18 @@
 import { network } from 'hardhat';
 import { ethers } from 'hardhat'
-import { Contract, BigNumber } from 'ethers'
-import { getGasUsed } from './utils';
+import { Contract } from 'ethers'
+import { customFormatUnits, getGasUsed } from './utils';
 import fetch from 'node-fetch';
 
 // SETTINGS
-const FACTION_ADVANTAGES = ['ORE', 'FAERIES']
-const USER_TEAM_ID = '6313'
-const USER_ADDRESS = '0x49806e26a35537769A6800d0f6631114F8703d7A'
-const MAX_GAS_PRICE = '50'
-const GAS_PRIORITY = '2'
+const FACTION_ADVANTAGES = ['ORE', 'FAERIES'] // The factions your team has an advantage against
+const USER_TEAM_ID = '6313' // The team you are looting with
+const USER_ADDRESS = '0x49806e26a35537769A6800d0f6631114F8703d7A' // Your address
+const MAX_GAS_PRICE = ethers.utils.parseUnits('100', 'gwei') // If the gwei gets higher than this, the script will not run
+const MAX_GAS_PRIORITY = ethers.utils.parseUnits('10', 'gwei') // If the gwei *priority* gets higher than this, the script will not run
+const GAS_PRIORITY_BONUS = ethers.utils.parseUnits('1', 'gwei') // The gwei amount the script will add to try to get prioritized
 
+// GLOBALS
 const GAME_ADDRESS = '0x82a85407bd612f52577909f4a58bfc6873f14da8'
 const MINES_REQ_BASE = 'https://idle-api.crabada.com/public/idle/mines'
 const MINES_REQ_ARGS = [
@@ -19,14 +21,21 @@ const MINES_REQ_ARGS = [
 ]
 const MINES_REQUEST = MINES_REQ_BASE + '?' + MINES_REQ_ARGS.join('&')
 const gasLimit = 300000
-let contract: Contract = undefined
-let gasPrice: BigNumber = undefined
+let contract: Contract
+let fee_data
 
 //Update "gasPrice" and exit if it is too high
-async function updateGas() {
-  gasPrice = await ethers.provider.getGasPrice()
-  if (gasPrice.gt(ethers.utils.parseUnits(MAX_GAS_PRICE, 'gwei'))) {
-    console.log('Gas price too high! (', parseFloat(ethers.utils.formatUnits(gasPrice, 'gwei')).toFixed(2), 'gwei)')
+async function updateFeeData() {
+  fee_data = await ethers.provider.getFeeData()
+  // console.log('gasPrice:', ethers.utils.formatUnits(fee_data.gasPrice, 'gwei'))
+  // console.log('maxFeePerGas:', ethers.utils.formatUnits(fee_data.maxFeePerGas, 'gwei'))
+  // console.log('maxPriorityFeePerGas:', ethers.utils.formatUnits(fee_data.maxPriorityFeePerGas, 'gwei'))
+  if (fee_data.gasPrice.gt(MAX_GAS_PRICE)) {
+    console.log('Gas price too high! (', customFormatUnits(fee_data.gasPrice, 'gwei', 2), 'gwei)')
+    process.exit(1)
+  }
+  else if ((fee_data.maxPriorityFeePerGas.add(GAS_PRIORITY_BONUS)).gt(MAX_GAS_PRIORITY)) {
+    console.log('Gas priority too high! (', customFormatUnits(fee_data.maxPriorityFeePerGas.add(GAS_PRIORITY_BONUS), 'gwei', 2), 'gwei)')
     process.exit(1)
   }
 }
@@ -54,21 +63,23 @@ async function updateFork() {
       },
     ],
   });
+  await updateFeeData()
 }
 
 //Try to loot a mine
 async function attackMine(game_id: string): Promise<Boolean> {
   // await updateFork()
-  await impersonateUser()
-  await updateGas()
+  // await impersonateUser()
   try {
     const signer = await ethers.getSigner(USER_ADDRESS)
     const tx = await contract.connect(signer).attack(
       parseInt(game_id),
       USER_TEAM_ID,
       {
-        gasPrice: gasPrice,
+        // gasPrice: fee_data.gasPrice,
         gasLimit: gasLimit,
+        maxFeePerGas: fee_data.maxFeePerGas,
+        maxPriorityFeePerGas: fee_data.maxPriorityFeePerGas.add(GAS_PRIORITY_BONUS),
       }
     )
     const receipt = await tx.wait()
@@ -106,8 +117,8 @@ async function getCurrentMines() {
   response = await fetch(MINES_REQUEST)
   first_json_response = await response.json()
   first_json_response = JSON.stringify(first_json_response)
-  // console.log('-----\nChecking for mines...\n-----')
   while (true) {
+    await updateFeeData()
     response = await fetch(MINES_REQUEST)
     json_response = await response.json()
     if (first_request && first_json_response == JSON.stringify(json_response)) first_request = false
@@ -123,16 +134,16 @@ async function getCurrentMines() {
 }
 
 async function main() {
-  await updateGas()
-  console.log('Current gas price:', parseFloat(ethers.utils.formatUnits(gasPrice, 'gwei')).toFixed(2))
+  await updateFeeData()
+  console.log('Current gas price:', parseFloat(ethers.utils.formatUnits(fee_data.gasPrice, 'gwei')).toFixed(2))
   contract = await ethers.getContractAt('Crabada', GAME_ADDRESS)
   console.log('Connected to Crabada contract at:', contract.address)
   await getCurrentMines()
 }
 
 main()
-// .then(() => process.exit(0))
-// .catch(e => {
-//   console.error(e)
-//   process.exit(1)
-// })
+.then(() => process.exit(0))
+.catch(e => {
+  console.error(e)
+  process.exit(1)
+})
