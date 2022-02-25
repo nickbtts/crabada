@@ -1,0 +1,52 @@
+{
+  "name": "avalanche-smart-contract-quickstart",
+  "devDependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.0.2",
+    "@nomiclabs/hardhat-waffle": "^2.0.1",
+    "@openzeppelin/contracts": "^4.4.1",
+    "@types/chai": "^4.2.21",
+    "@types/mocha": "^9.0.0",
+    "@types/node": "^16.7.1",
+    "avalanche": "^3.12.0",
+    "chai": "^4.3.4",
+    "ethereum-waffle": "^3.4.0",
+    "ethereumjs-tx": "^2.1.2",
+    "ethers": "^5.4.5",
+    "hardhat": "2.6.1",
+    "ts-node": "^10.2.1",
+    "web3": "^1.5.2"
+  },
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "repository": "https://github.com/ava-labs/avalanche-smart-contract-quickstart",
+  "author": "Connor Daly <connor.daly@avalabs.org>",
+  "contributors": [
+    "Gabriel Cardona <gabriel@avalabs.org>"
+  ],
+  "license": "BSD-3-Clause",
+  "scripts": {
+    "precompile": "rimraf ./build/",
+    "compile": "npx hardhat compile",
+    "console": "npx hardhat console",
+    "pretest": "yarn compile",
+    "test": "npx hardhat test",
+    "deploy": "npx hardhat run scripts/deploy.ts",
+    "send-avax-wallet-signer": "npx hardhat run scripts/local/sendAvaxWalletSigner.ts",
+    "lint": "prettier ./test/**/*.ts --check",
+    "prepublishOnly": "yarn test",
+    "hardhat": "npx hardhat",
+    "accounts": "npx hardhat accounts",
+    "balances": "npx hardhat balances",
+    "fund-cchain-addresses": "npx hardhat run scripts/local/fund-cchain-addresses.js"
+  },
+  "dependencies": {
+    "@nomiclabs/hardhat-etherscan": "^3.0.0",
+    "dotenv": "^10.0.0",
+    "node-fetch": "^2.6.1",
+    "typescript": "^4.3.5"
+  },
+  "engines": {
+    "node": ">=14.17.0"
+  }
+}
