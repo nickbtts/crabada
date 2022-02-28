@@ -29,6 +29,7 @@ const MINES_REQ_BASE = 'https://idle-api.crabada.com/public/idle/mines'
 const MINES_REQ_ARGS = [
   'can_loot=1',
   'looter_address=' + SETTINGS.USER_ADDRESS,
+  'limit=' + (SETTINGS.LOTS_OF_MINES + 1),
 ]
 export const GLOBALS = {
   GAME_ADDRESS: '0x82a85407bd612f52577909f4a58bfc6873f14da8',
