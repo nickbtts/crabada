@@ -20,7 +20,6 @@ export async function attackMine(game_id: string): Promise<Boolean> {
       parseInt(game_id),
       SETTINGS.USER_TEAM_ID,
       {
-        // gasPrice: fee_data.gasPrice,
         gasLimit: GLOBALS.GASLIMIT,
         maxFeePerGas: fee_data.maxFeePerGas,
         maxPriorityFeePerGas: fee_data.maxPriorityFeePerGas.add(SETTINGS.GAS_PRIORITY_BONUS),
@@ -67,6 +66,7 @@ async function getCurrentMines() {
 let contract: Contract
 
 async function main() {
+  if (SETTINGS.DEBUG) console.log('DEBUGGING\n-----')
   await updateFeeData()
   console.log('AVAX balance:', customFormatUnits(await ethers.provider.getBalance(SETTINGS.USER_ADDRESS), 'ether', 2))
   console.log('Current gas price (gwei):', parseFloat(ethers.utils.formatUnits(fee_data.gasPrice, 'gwei')).toFixed(2))

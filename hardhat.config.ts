@@ -68,7 +68,6 @@ export default {
   networks: {
     hardhat: {
       gasPrice: 225000000000,
-      // chainId: !forkingData ? 43112 : undefined, //Only specify a chainId if we are not forking
       chainId: 43114,
       forking: forkingData,
     },
@@ -99,7 +98,7 @@ export default {
       url: 'https://api.avax.network/ext/bc/C/rpc',
       gasPrice: 25000000000,
       chainId: 43114,
-      accounts: []
+      accounts: [process.env.PRIVATE_KEY]
     }
   },
 }
